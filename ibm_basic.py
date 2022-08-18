@@ -35,10 +35,53 @@ attr2= {
         pymqi.CMQC.MQCA_Q_NAME :'*',
 }
 
-result2 = pcf.MQCMD_INQUIRE_CONNECTIONS(attr2)
+result2 = pcf.MQCMD_INQUIRE_Q(attr2)
 
 
-for queue_info in result2:
+attr3={
+        pymqi.CMQCFC.MQCACH_CHANNEL_NAME:"*",
+        pymqi.CMQCFC.MQIACH_CHANNEL_INSTANCE_ATTRS : 
+                                                   [pymqi.CMQCFC.MQCACH_CHANNEL_NAME, 
+                                                   pymqi.CMQCFC.MQCACH_CONNECTION_NAME, 
+                                                   pymqi.CMQCFC.MQIACH_CHANNEL_STATUS, 
+                                                   pymqi.CMQCFC.MQIACH_MSGS,
+                                                   pymqi.CMQCFC.MQIACH_BYTES_SENT,
+                                                   pymqi.CMQCFC.MQIACH_BYTES_RECEIVED,
+                                                   pymqi.CMQCFC.MQIACH_BUFFERS_SENT,
+                                                   pymqi.CMQCFC.MQIACH_BUFFERS_RECEIVED,
+                                                   pymqi.CMQCFC.MQIACH_INDOUBT_STATUS,
+                                                   pymqi.CMQCFC.MQIACH_CHANNEL_SUBSTATE,
+                                                   pymqi.CMQCFC.MQCACH_CHANNEL_START_DATE,
+                                                   pymqi.CMQCFC.MQCACH_CHANNEL_START_TIME
+
+                                                     ]}
+
+result3 = pcf.MQCMD_INQUIRE_CHANNEL_STATUS(attr3)
+
+
+
+# channel metrics
+for channel_info in result3:
+        channel_name=channel_info[pymqi.CMQCFC.MQCACH_CHANNEL_NAME]
+        if channel_name.decode('utf-8').strip()=="QMLAB1.SVRCONN":
+                print(channel_name)
+                print(channel_info[pymqi.CMQCFC.MQCACH_CONNECTION_NAME].decode('utf-8').strip())
+                print(channel_info[pymqi.CMQCFC.MQIACH_CHANNEL_STATUS])
+                print(channel_info[pymqi.CMQCFC.MQIACH_MSGS])
+                print(channel_info[pymqi.CMQCFC.MQIACH_BYTES_SENT])
+                print(channel_info[pymqi.CMQCFC.MQIACH_BYTES_RECEIVED])
+                print(channel_info[pymqi.CMQCFC.MQIACH_BUFFERS_SENT])
+                print(channel_info[pymqi.CMQCFC.MQIACH_BUFFERS_RECEIVED])
+                print(channel_info[pymqi.CMQCFC.MQIACH_CHANNEL_SUBSTATE])
+                print(channel_info[pymqi.CMQCFC.MQCACH_CHANNEL_START_DATE].decode('utf-8'))
+                print(channel_info[pymqi.CMQCFC.MQCACH_CHANNEL_START_TIME].decode('utf-8'))
+                break
+
+                
+
+
+# queue metrics 1
+"""for queue_info in result2:
         queue_name = queue_info[pymqi.CMQC.MQCA_Q_NAME]
 
         if queue_name.decode("utf-8").strip()=="ORDER.INPUT":
@@ -52,6 +95,8 @@ for queue_info in result2:
 
 
 
+# queue metrics 2
+
 for queue_info in result1:
         queue_name = queue_info[pymqi.CMQC.MQCA_Q_NAME]
 
@@ -63,3 +108,4 @@ for queue_info in result1:
                 print(queue_info[pymqi.CMQCFC.MQCACF_LAST_PUT_TIME])
                 print(queue_info[pymqi.CMQCFC.MQIACF_OLDEST_MSG_AGE])
                 print(queue_info[pymqi.CMQCFC.MQIACF_UNCOMMITTED_MSGS])
+"""
