@@ -51,10 +51,7 @@ metrics=[
 "Channel Start Date",
 "Channel Start Time"
 ]
-Like (0) Reply
-￼
-Bryan W
-Re: Re: Can we monitor IBM MQ 9.0 with site 24x7?
+
 
 
 class IbmMq:
@@ -92,7 +89,6 @@ class IbmMq:
 
 
 
-                
                 
 
 
@@ -302,12 +298,6 @@ class IbmMq:
                 
         
 
-                
-
-
-                
-
-
 if __name__=="__main__":
 
         queue_manager = 'QMLAB1'
@@ -319,3 +309,4 @@ if __name__=="__main__":
         ibm_obj=IbmMq(conf_details)
         ibm_mq_metric_data=ibm_obj.metricCollector()
         print(json.dumps(ibm_mq_metric_data,indent=True))
+
