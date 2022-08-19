@@ -60,52 +60,62 @@ result3 = pcf.MQCMD_INQUIRE_CHANNEL_STATUS(attr3)
 
 
 
-# channel metrics
-for channel_info in result3:
-        channel_name=channel_info[pymqi.CMQCFC.MQCACH_CHANNEL_NAME]
-        if channel_name.decode('utf-8').strip()=="QMLAB1.SVRCONN":
-                print(channel_name)
-                print(channel_info[pymqi.CMQCFC.MQCACH_CONNECTION_NAME].decode('utf-8').strip())
-                print(channel_info[pymqi.CMQCFC.MQIACH_CHANNEL_STATUS])
-                print(channel_info[pymqi.CMQCFC.MQIACH_MSGS])
-                print(channel_info[pymqi.CMQCFC.MQIACH_BYTES_SENT])
-                print(channel_info[pymqi.CMQCFC.MQIACH_BYTES_RECEIVED])
-                print(channel_info[pymqi.CMQCFC.MQIACH_BUFFERS_SENT])
-                print(channel_info[pymqi.CMQCFC.MQIACH_BUFFERS_RECEIVED])
-                print(channel_info[pymqi.CMQCFC.MQIACH_CHANNEL_SUBSTATE])
-                print(channel_info[pymqi.CMQCFC.MQCACH_CHANNEL_START_DATE].decode('utf-8'))
-                print(channel_info[pymqi.CMQCFC.MQCACH_CHANNEL_START_TIME].decode('utf-8'))
-                break
 
+
+def listenerCollector():
+        try:
+                attr={
+                        pymqi.CMQCFC.MQCACH_LISTENER_NAME:"*"
+                }
+
+
+                listener_responses=pcf.MQCMD_INQUIRE_LISTENER(attr)
+                listener_name=""
+
+                for response in listener_responses:
+                        if response[pymqi.CMQCFC.MQCACH_LISTENER_NAME].decode('utf-8').strip()=='QMLAB1.LISTENER':
+                                listener_name=response[pymqi.CMQCFC.MQCACH_LISTENER_NAME]
                 
+                attr2={
+                        pymqi.CMQCFC.MQCACH_LISTENER_NAME:"*"
 
-
-# queue metrics 1
-"""for queue_info in result2:
-        queue_name = queue_info[pymqi.CMQC.MQCA_Q_NAME]
-
-        if queue_name.decode("utf-8").strip()=="ORDER.INPUT":
-
-                print(queue_name)
-                print(queue_info[pymqi.CMQC.MQIA_CURRENT_Q_DEPTH])
-                print(queue_info[pymqi.CMQC.MQIA_OPEN_INPUT_COUNT])
-                print(queue_info[pymqi.CMQC.MQIA_OPEN_OUTPUT_COUNT])
-                print(queue_info[pymqi.CMQC.MQIA_Q_TYPE])
-                break
+                }
+                listenser_responses2=pcf.MQCMD_INQUIRE_LISTENER_STATUS(attr2)
 
 
 
-# queue metrics 2
 
-for queue_info in result1:
-        queue_name = queue_info[pymqi.CMQC.MQCA_Q_NAME]
+        except Exception as e:
+                print(str(e))
 
-        if queue_name.decode("utf-8").strip()=="ORDER.INPUT":
-        
-                print(queue_info[pymqi.CMQCFC.MQCACF_LAST_GET_DATE])
-                print(queue_info[pymqi.CMQCFC.MQCACF_LAST_GET_TIME])
-                print(queue_info[pymqi.CMQCFC.MQCACF_LAST_PUT_DATE])
-                print(queue_info[pymqi.CMQCFC.MQCACF_LAST_PUT_TIME])
-                print(queue_info[pymqi.CMQCFC.MQIACF_OLDEST_MSG_AGE])
-                print(queue_info[pymqi.CMQCFC.MQIACF_UNCOMMITTED_MSGS])
-"""
+
+def QMgrCollector():
+        try:
+                attr={
+                        pymqi.CMQCFC.MQIACF_Q_MGR_STATUS_ATTRS:[
+                                pymqi.CMQCFC.MQIACF_CHINIT_STATUS,
+                                pymqi.CMQCFC.MQIACF_CMD_SERVER_STATUS,
+                                pymqi.CMQCFC.MQIACF_CONNECTION_COUNT,
+                                pymqi.CMQCFC.MQIACF_Q_MGR_STATUS
+                                
+
+                        ]
+                }
+                qmgr_responses=pcf.CMQCFC.MQCMD_INQUIRE_Q_MGR_STATUS(attr)
+                print(qmgr_responses[0][pymqi.CMQCFC.MQIACF_Q_MGR_STATUS])
+
+                for response in qmgr_responses:
+                        Qmgr_name=response[pymqi.CMQC.MQCA_Q_MGR_NAME]
+
+                        if Qmgr_name.decode('utf-8').strip() == "QMLAB1":
+                                print(response[pymqi.CMQCFC.MQIACF_CHINIT_STATUS])
+                                print(response[pymqi.CMQCFC.MQIACF_CMD_SERVER_STATUS])
+                                print(response[pymqi.CMQCFC.MQIACF_CONNECTION_COUNT])
+                                print(response[pymqi.CMQCFC.MQIACF_Q_MGR_STATUS])
+
+
+
+        except Exception as e:
+                print(str(e))
+
+QMgrCollector()
