@@ -1,30 +1,15 @@
+#!/usr/bin/python3
 import json
-from collections import OrderedDict
 
-"""
-MQCHSSTATE_OTHER = 0
-MQCHSSTATE_END_OF_BATCH = 100
-MQCHSSTATE_SENDING = 200
-MQCHSSTATE_RECEIVING = 300
-MQCHSSTATE_SERIALIZING = 400
-MQCHSSTATE_RESYNCHING = 500
-MQCHSSTATE_HEARTBEATING = 600
-MQCHSSTATE_IN_SCYEXIT = 700
-MQCHSSTATE_IN_RCVEXIT = 800
-MQCHSSTATE_IN_SENDEXIT = 900
-MQCHSSTATE_IN_MSGEXIT = 1000
-MQCHSSTATE_IN_MREXIT = 1100
-MQCHSSTATE_IN_CHADEXIT = 1200
-MQCHSSTATE_NET_CONNECTING = 1250
-MQCHSSTATE_SSL_HANDSHAKING = 1300
-MQCHSSTATE_NAME_SERVER = 1400
-MQCHSSTATE_IN_MQPUT = 1500
-MQCHSSTATE_IN_MQGET = 1600
-MQCHSSTATE_IN_MQI_CALL = 1700
-MQCHSSTATE_COMPRESSING = 1800
-"""
+
 
 metrics=[
+
+# Queue Manager Metrics
+"Queue_Metrics.High Queue Depth",
+"Queue_Metrics.Msg Dequeue Count",
+"Queue_Metrics.Msg Enqueue Count"
+
 
 # Queue Metrics
 "Queue Name",
@@ -38,6 +23,7 @@ metrics=[
 "Oldest Msg Age",
 "No. of Uncommitted Msgs",
 
+
 # Channel Metrics
 "Channel Name",
 "Channel Connection Name",
@@ -50,15 +36,38 @@ metrics=[
 "Channel Substate"
 "Channel Start Date",
 "Channel Start Time"
+
+
 ]
 
-
+PLUGIN_VERSION=1
+HEARTBEAT=True
 
 class IbmMq:
 
-        def __init__(self,conf_details):
+        def __init__(self,args):
                 self.maindata={}
-                self.queue_manager,self.channel,self.host,self.port=conf_details
+                self.queue_manager=args.queue_manager_name
+                self.channel=args.channel_name
+                self.queue_name=args.queue_name
+                self.host=args.host
+                self.port=args.port
+
+                self.maindata['plugin_version'] = PLUGIN_VERSION
+                self.maindata['heartbeat_required']=HEARTBEAT
+
+
+                if args.username == "None":
+                        self.username=None
+                else:
+                        self.username=args.username
+                if args.password == "None":
+                        self.password=None
+                else:
+                        self.username=args.username
+              
+
+
                 self.conn_info='%s(%s)' % (self.host, self.port)
                 self.main()
 
@@ -66,8 +75,6 @@ class IbmMq:
 
 
         def main(self):
-
-
                 try:
                         global pymqi
                         import pymqi
@@ -95,7 +102,7 @@ class IbmMq:
         def mqConnector(self):
 
                 try:
-                        self.qmgr = pymqi.connect(self.queue_manager, self.channel, self.conn_info)
+                        self.qmgr = pymqi.connect(self.queue_manager, self.channel, self.conn_info,self.username,self.password)
                         self.pcf = pymqi.PCFExecute(self.qmgr)
                         self.metricCollector()
                         
@@ -121,12 +128,11 @@ class IbmMq:
                                 ]
                         }
                         qmgr_responses=self.pcf.CMQCFC.MQCMD_INQUIRE_Q_MGR_STATUS(attr)
-                        print(qmgr_responses[0][pymqi.CMQCFC.MQIACF_Q_MGR_STATUS])
 
                         for response in qmgr_responses:
                                 Qmgr_name=response[pymqi.CMQC.MQCA_Q_MGR_NAME]
 
-                                if Qmgr_name.decode('utf-8').strip() == "QMLAB1":
+                                if Qmgr_name.decode('utf-8').strip() == self.queue_manager:
                                         self.maindata["QManager_metrics.Connection_count"]=response[pymqi.CMQCFC.MQIACF_CONNECTION_COUNT]
                                         self.maindata["QManager_metrics.Status"]=Queue_manager_status[response[pymqi.CMQCFC.MQIACF_Q_MGR_STATUS]]
 
@@ -139,7 +145,6 @@ class IbmMq:
         def queueCollector(self):
 
                 try:
-
 
 
                         
@@ -169,15 +174,10 @@ class IbmMq:
 
 
 
-
-                        
-
-
-
                         for response in queue_responses1:
                                 queue_name = response[pymqi.CMQC.MQCA_Q_NAME]
 
-                                if queue_name.decode("utf-8").strip()=="ORDER.INPUT":
+                                if queue_name.decode("utf-8").strip()==self.queue_name:
 
                                         self.maindata["Queue_Metrics.Queue Name"]= queue_name.decode("utf-8").strip()
                                         self.maindata["Queue_Metrics.Current Queue Depth"]=response[pymqi.CMQC.MQIA_CURRENT_Q_DEPTH]
@@ -189,7 +189,7 @@ class IbmMq:
                         for response in queue_responses2:
                                 queue_name = response[pymqi.CMQC.MQCA_Q_NAME]
 
-                                if queue_name.decode("utf-8").strip()=="ORDER.INPUT":
+                                if queue_name.decode("utf-8").strip()==self.queue_name:
                         
                                         self.maindata["Queue_Metrics.Last Msg get Date"]=response[pymqi.CMQCFC.MQCACF_LAST_GET_DATE].decode("utf-8")
                                         self.maindata["Queue_Metrics.Last Msg get Time"]=response[pymqi.CMQCFC.MQCACF_LAST_GET_TIME].decode("utf-8")
@@ -202,13 +202,13 @@ class IbmMq:
                         for response in queue_responses3:
                                 queue_name = response[pymqi.CMQC.MQCA_Q_NAME]
 
-                                if queue_name.decode("utf-8").strip()=="ORDER.INPUT":    
+                                if queue_name.decode("utf-8").strip()==self.queue_name:    
                                         self.maindata["Queue_Metrics.High Queue Depth"]=response[pymqi.CMQC.MQIA_HIGH_Q_DEPTH]
                                         self.maindata["Queue_Metrics.Msg Dequeue Count"]=response[pymqi.CMQC.MQIA_MSG_DEQ_COUNT]
                                         self.maindata["Queue_Metrics.Msg Enqueue Count"]=response[pymqi.CMQC.MQIA_MSG_ENQ_COUNT]
 
                                         
-                        
+                      
 
 
 
@@ -225,7 +225,20 @@ class IbmMq:
 
                 try:
 
-                        channel_statuses=["Channel Inactive","Channel Binding", "Channel Starting", "Channel Running", "Channel Stopping", "Channel Retrying", "Channel Stopped", "Channel Requesting", "Channel Paused", "Channel Disconnected", "Channel Initializing", "Channel Switching"]
+                        channel_statuses=["Channel Inactive",
+                                        "Channel Binding", 
+                                        "Channel Starting", 
+                                        "Channel Running", 
+                                        "Channel Stopping", 
+                                        "Channel Retrying", 
+                                        "Channel Stopped", 
+                                        "Channel Requesting", 
+                                        "Channel Paused", 
+                                        "Channel Disconnected", 
+                                        "Channel Initializing", 
+                                        "Channel Switching"]
+
+
                         channel_substate={
                                 0:"Undefined State",
                                 100:"End of batch processing",
@@ -276,7 +289,7 @@ class IbmMq:
 
                         for channel_response in channel_responses:
                                 channel_name=channel_response[pymqi.CMQCFC.MQCACH_CHANNEL_NAME]
-                                if channel_name.decode('utf-8').strip()=="QMLAB1.SVRCONN":
+                                if channel_name.decode('utf-8').strip()==self.channel:
                                         self.maindata["Channel_Metrics.Channel Name"]=channel_name.decode('utf-8').strip()
                                         self.maindata["Channel_Metrics.Channel Connection Name"]=channel_response[pymqi.CMQCFC.MQCACH_CONNECTION_NAME].decode('utf-8').strip()
                                         self.maindata["Channel_Metrics.Channel Status"]=channel_statuses[channel_response[pymqi.CMQCFC.MQIACH_CHANNEL_STATUS]]
@@ -300,13 +313,28 @@ class IbmMq:
 
 if __name__=="__main__":
 
-        queue_manager = 'QMLAB1'
-        channel = 'QMLAB1.SVRCONN'
+        queue_manager_name = 'QMLAB1'
+        channel_name = 'QMLAB1.SVRCONN'
+        queue_name='ORDER.INPUT'
         host = '127.0.0.1'
         port = '1414'
+        username="None"
+        password="None"
 
-        conf_details=[queue_manager,channel,host,port]
-        ibm_obj=IbmMq(conf_details)
+        import argparse
+        parser=argparse.ArgumentParser()
+        parser.add_argument('--queue_manager_name',help="Enter queue manager name",default=queue_manager_name)
+        parser.add_argument('--channel_name',help="Enter channel name",default=channel_name)
+        parser.add_argument('--queue_name',help="Enter queue name",default=queue_name)
+        parser.add_argument('--host',help="Enter host name",default=host)
+        parser.add_argument('--port',help="Enter port number",default=port)
+        parser.add_argument('--username',help="Enter username",default=username)
+        parser.add_argument('--password',help="Enter password",default=password)
+
+        args=parser.parse_args()
+
+
+        ibm_obj=IbmMq(args)
         ibm_mq_metric_data=ibm_obj.metricCollector()
         print(json.dumps(ibm_mq_metric_data,indent=True))
 
