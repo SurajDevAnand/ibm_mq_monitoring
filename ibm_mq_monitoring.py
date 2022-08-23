@@ -6,9 +6,8 @@ import json
 metrics=[
 
 # Queue Manager Metrics
-"Queue_Metrics.High Queue Depth",
-"Queue_Metrics.Msg Dequeue Count",
-"Queue_Metrics.Msg Enqueue Count"
+"Connection Count",
+"Status"
 
 
 # Queue Metrics
@@ -22,6 +21,10 @@ metrics=[
 "Last Msg put Time",
 "Oldest Msg Age",
 "No. of Uncommitted Msgs",
+"High Queue Depth",
+"Msg Dequeue Count",
+"Msg Enqueue Count"
+
 
 
 # Channel Metrics
@@ -133,7 +136,7 @@ class IbmMq:
                                 Qmgr_name=response[pymqi.CMQC.MQCA_Q_MGR_NAME]
 
                                 if Qmgr_name.decode('utf-8').strip() == self.queue_manager:
-                                        self.maindata["QManager_metrics.Connection_count"]=response[pymqi.CMQCFC.MQIACF_CONNECTION_COUNT]
+                                        self.maindata["QManager_metrics.Connection Count"]=response[pymqi.CMQCFC.MQIACF_CONNECTION_COUNT]
                                         self.maindata["QManager_metrics.Status"]=Queue_manager_status[response[pymqi.CMQCFC.MQIACF_Q_MGR_STATUS]]
 
 
