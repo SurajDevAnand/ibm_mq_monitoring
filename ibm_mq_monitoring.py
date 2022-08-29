@@ -45,6 +45,8 @@ metrics=[
 
 PLUGIN_VERSION=1
 HEARTBEAT=True
+METRICS_UNITS={'Channel_Metrics.Bytes Sent':'Bytes','Channel_Metrics.Bytes Received':'Bytes'}
+
 
 class IbmMq:
 
@@ -55,9 +57,16 @@ class IbmMq:
                 self.queue_name=args.queue_name
                 self.host=args.host
                 self.port=args.port
+                self.logsenabled=args.logs_enabled
+                self.logtypename=args.log_type_name
+                self.logfilepath=args.log_file_path
+
+
 
                 self.maindata['plugin_version'] = PLUGIN_VERSION
                 self.maindata['heartbeat_required']=HEARTBEAT
+                self.maindata['units']=METRICS_UNITS
+
 
 
                 if args.username == "None":
@@ -95,6 +104,18 @@ class IbmMq:
                 self.queueCollector()
                 self.channelCollector()
                 self.QMgrCollector()
+
+                applog={}
+                if(self.logsenabled in ['True', 'true', '1']):
+                        applog["logs_enabled"]=True
+                        applog["log_type_name"]=self.logtypename
+                        applog["log_file_path"]=self.logfilepath
+                else:
+                        applog["logs_enabled"]=False
+                self.maindata['applog'] = applog
+
+
+
                 return self.maindata
 
 
@@ -316,11 +337,11 @@ class IbmMq:
 
 if __name__=="__main__":
 
-        queue_manager_name = 'QMLAB1'
-        channel_name = 'QMLAB1.SVRCONN'
-        queue_name='ORDER.INPUT'
-        host = '127.0.0.1'
-        port = '1414'
+        queue_manager_name = None
+        channel_name = None
+        queue_name=None
+        host = None
+        port = None
         username="None"
         password="None"
 
@@ -333,6 +354,9 @@ if __name__=="__main__":
         parser.add_argument('--port',help="Enter port number",default=port)
         parser.add_argument('--username',help="Enter username",default=username)
         parser.add_argument('--password',help="Enter password",default=password)
+        parser.add_argument('--logs_enabled', help='enable log collection for this plugin application',default="False")
+        parser.add_argument('--log_type_name', help='Display name of the log type', nargs='?', default=None)
+        parser.add_argument('--log_file_path', help='list of comma separated log file paths', nargs='?', default=None)
 
         args=parser.parse_args()
 
